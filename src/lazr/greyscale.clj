@@ -1,73 +1,8 @@
 (ns lazr.greyscale
   (:require [clojure.math :as math])
-  (:import java.awt.image.BufferedImage
-           ;;java.awt.image.DataBuffer
+  (:import java.awt.Color
+           java.awt.image.BufferedImage
            java.awt.image.IndexColorModel))
-
-;; TODO
-;; (defn ->grey
-;;   [image]
-;;     (let [step (/ 256 num-greys)
-;;         values (byte-array (range 0 255 step))
-;;         color-model (IndexColorModel. 8 num-greys values values values)
-;;         new-image (BufferedImage. (.getWidth image)
-;;                                   (.getHeight image)
-;;                                   BufferedImage/TYPE_BYTE_INDEXED
-;;                                   color-model)
-;;         in-rast (.getData image)
-;;         in (.getDataBuffer in-rast)
-;;         out-rast (.getData new-image)
-;;         out (.getDataBuffer out-rast) ;; Is there a better way? Like getting a writable raster?
-;;         scale (make-scaler [0 255] 0 [0 (bit-shift-left 1 (.getPixelSize (.getColorModel image)))])]
-;;     (println data-elements (.getTransferType in-rast)  (type->key (.getType image)) (.getPixelSize (.getColorModel image)))
-;;     ;; It's an alpha channel. Need to detect that and work around it. Works fine for 16bit grey?
-;;     ;; No it doesn't work for 16bit grey. The scaler is fucked. 
-;;     #_(dotimes [i (.getSize out)]
-;;         (let [value (->> (map (fn [j]
-;;                               ;;(println i (* i data-elements))
-;;                               ;(.getElem in (+ j (* i data-elements)))
-;;                                 (bit-shift-left (.getElem in (+ j (* i data-elements))) (* 8 j)))
-;;                               (range data-elements))
-;;                          (apply +)
-;;                          (scale)
-;;                          (#(/ % step))
-;;                          (int))]
-;;         ;(println value)
-;;           (.setElem out i value)))
-;;     (.setData new-image out-rast)
-;;     new-image)
-;;   (let [new-image (BufferedImage. (.getWidth image)
-;;                                   (.getHeight image)
-;;                                   BufferedImage/TYPE_BYTE_GRAY)]
-;;     ;; I think there is some fuckery due to numDataElements
-;;     ;; there is definitely some fuckery here due to numDataElements
-;;     ;; likely some real conversion needs to happen to make this greyscale
-;;     ;; OR is the issue the size of the data? pixelBits was 24
-;;     ;; (.getPixelSize (.getColorModel image))
-;;     (.setData new-image (.getData image))
-;;     new-image))
-
-(defn make-scaler
-  [[out-min out-max] offset [in-min in-max]]
-  (fn [val]
-    (+ (/ (* (- val in-min)
-             (- out-max out-min))
-          (- in-max in-min))
-       out-min
-       offset)))
-
-(defn- bytes-max
-  [b]
-  (math/pow 2.0 (* 8 b)))
-
-;; (def transfer-type->key
-;;   DataBuffer/TYPE_BYTE :byte
-;;   DataBuffer/TYPE_DOUBLE :double
-;;   DataBuffer/TYPE_FLOAT :float
-;;   DataBuffer/TYPE_INT :int
-;;   DataBuffer/TYPE_SHORT :short
-;;   DataBuffer/TYPE_UNDEFINED :undefined
-;;   DataBuffer/TYPE_USHORT :ushort)
 
 (def type->key
   {BufferedImage/TYPE_3BYTE_BGR :3-byte-bgr
@@ -85,14 +20,41 @@
    BufferedImage/TYPE_USHORT_565_RGB :ushort-565-rgb
    BufferedImage/TYPE_USHORT_GRAY :ushort-gray})
 
-;; (def type-has-alpha
-;;   {:3-byte-abgr true
-;;    :4-byte-abgr true
-;;    :4-byte-abgr-pre true
-;;    :int-argb true
-;;    :int-argb-pre true})
+(defn make-scaler
+  [[out-min out-max] offset [in-min in-max]]
+  (fn [val]
+    (+ (/ (* (- val in-min)
+             (- out-max out-min))
+          (- in-max in-min))
+       out-min
+       offset)))
 
-(defn ->indexed-grey
+(defn ->weighted
+  [weights image]
+  (let [width (.getWidth image)
+        height (.getHeight image)
+        new-image (BufferedImage. width
+                                  height
+                                  BufferedImage/TYPE_BYTE_GRAY)
+        rast (.getData new-image)
+        data (.getDataBuffer rast)]
+    (dotimes [x width]
+      (dotimes [y height]
+        (let [color (Color. (.getRGB image x y))
+              r (* (.getRed color) (:r weights))
+              g (* (.getGreen color) (:g weights))
+              b (* (.getBlue color) (:b weights))
+              value (->> (+ r g b)
+                         (int))]
+          (.setElem data (+ (* y width) x) value))))
+    (.setData new-image rast)
+    new-image))
+
+(def ->avg (partial ->weighted {:r 1/3 :g 1/3 :b 1/3}))
+
+(def ->luminosity (partial ->weighted {:r 0.299 :g 0.587 :b 0.114}))
+
+(defn ->indexed
   [image num-greys]
   (let [type (type->key (.getType image))]
     (when-not (or (= type :ushort-gray)
@@ -116,4 +78,3 @@
         (.setElem data i value)))
     (.setData new-image rast)
     new-image))
-
