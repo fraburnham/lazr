@@ -3,4 +3,5 @@
 .lsp/
 .nrepl-port
 *.png
+*.jpg
 *~
