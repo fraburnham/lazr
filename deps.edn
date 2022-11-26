@@ -1,0 +1,9 @@
+{:paths ["src"
+         "classes"]
+ :deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        commons-cli/commons-cli {:mvn/version "1.5.0"}}
+ :aliases {:uberjar {:extra-deps {uberdeps/uberdeps {:mvn/version "1.1.4"}}
+                     :replace-paths []
+                     ;; must run `clj -M e "(compile 'lazr.core)"` to generate the class first!!!
+                     ;; how to make that part of this?
+                     :main-opts ["-m" "uberdeps.uberjar" "--main-class" "lazr.core"]}}}
