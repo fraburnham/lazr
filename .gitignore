@@ -1,3 +1,5 @@
+classes/
+target/
 .clj-kondo/
 .cpcache/
 .lsp/
@@ -5,3 +7,4 @@
 *.png
 *.jpg
 *~
+\#*\#
