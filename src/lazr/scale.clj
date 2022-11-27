@@ -14,16 +14,21 @@
         (.drawImage (.getScaledInstance image width-pixels height-pixels Image/SCALE_SMOOTH) 0 0 nil))
     out-buffer))
 
+(def str->int #(Integer/parseInt %))
+
 (def options
   {:s {:lazr.command/long-opt "steps-per-mm"
        :lazr.command/description "Number of steps per mm (often 10 for a line width of 0.1mm)"
-       :lazr.command/has-arg true}
+       :lazr.command/has-arg true
+       :lazr.command/parser str->int}
    :x {:lazr.command/long-opt "width"
        :lazr.command/description "Width of the engraved image in mm"
-       :lazr.command/has-arg true}
+       :lazr.command/has-arg true
+       :lazr.command/parser str->int}
    :y {:lazr.command/long-opt "height"
        :lazr.command/description "Height of the engraved image in mm"
-       :lazr.command/has-arg true}
+       :lazr.command/has-arg true
+       :lazr.command/parser str->int}
    :i {:lazr.command/long-opt "input"
        :lazr.command/description "Input file"
        :lazr.command/has-arg true}
@@ -42,12 +47,12 @@
                                               nil)}
                     args)
       (catch clojure.lang.ExceptionInfo e
-        (if (= :lazr.command/no-command (:lazr.command/type e))
+        (if (= :lazr.command/no-command (:lazr.command/type (ex-data e)))
           (let [in (:i opts)
                 out (:o opts)
                 pixels-per-mm (:s opts)
-                height (Integer/parseInt (:y opts))
-                width (Integer/parseInt (:x opts))]
+                height (:y opts)
+                width (:x opts)]
             (as-> (ImageIO/read (File. in)) *
               (scale pixels-per-mm width height *)
               (ImageIO/write * "png" (File. out))))

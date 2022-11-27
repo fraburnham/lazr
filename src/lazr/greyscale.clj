@@ -5,7 +5,7 @@
            javax.imageio.ImageIO))
 
 (defn apply-command
-  [command input-path output-path & params]
+  [command input-path output-path params]
   (as-> (ImageIO/read (File. input-path)) *
     (apply command (cons * params))
     (ImageIO/write * "png" (File. output-path))))
@@ -23,7 +23,7 @@
   (run [_ opts _]
     ;; handle help case in here!
     ;; the dispatch and catch way
-    (apply-command fn (:i opts) (:o opts)))
+    (apply-command fn (:i opts) (:o opts) (vals (dissoc opts :i :o))))
 
   (help [_] {:lazr.command/description description})
 
@@ -33,10 +33,10 @@
   {:average (->SubCommand "Convert an image to grey based on the average of each pixel's R, G, and B values" options grey/->avg)
    :luminosity (->SubCommand "Convert an image to grey based on luminosity" options grey/->luminosity)
    :indexed (->SubCommand "Simplify a greyscale image by indexing"
-                          (merge options {:lazr.command/opt "c"
-                                          :lazr.command/long-opt "num-greys"
-                                          :lazr.command/description "Number of grey colors to use in output"
-                                          :lazr.command/parser #(Integer/parseInt %)})
+                          (merge options {:c {:lazr.command/long-opt "num-greys"
+                                              :lazr.command/description "Number of grey colors to use in output"
+                                              :lazr.command/parser #(Integer/parseInt %)
+                                              :lazr.command/has-arg true}})
                           grey/->indexed)})
 
 (def desc "Convert rasters to greyscale for engraving")
