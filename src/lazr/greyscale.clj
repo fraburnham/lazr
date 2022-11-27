@@ -28,6 +28,7 @@
 (def options (as-> (Options.) *
                (.addOption * (-> (Option/builder "i") (.longOpt "input") (.hasArg) (.desc "Input file") (.required) (.build)))
                (.addOption * (-> (Option/builder "o") (.longOpt "output") (.hasArg) (.desc "Output file (will be written as png)") (.required) (.build)))
+               ;; help is busted (yay!)
                (.addOption * "h" "help" false "Display option help")))
 
 (defn average
