@@ -71,35 +71,36 @@
        int
        (concat
         (map #(+ % (/ expand-step-size 2))
-             (range 0 (- max (* out max)) expand-step-size))
+             (range 0 expand-range expand-step-size))
         (map #(+ % (/ squash-step-size 2))
-             (range (- max (* out max)) max squash-step-size))))))))
+             (range expand-range max squash-step-size))))))))
 
 ;; TODO: long term I wonder if I could use a histogram to determine how to shift the values automagically...
 ;; TODO: spec for squash?
 (defn ->indexed
-  ([image num-greys]
-   (->indexed image num-greys {:in 1 :out (/ 1 num-greys)}))
-  ([image num-greys {:keys [in out]}]
-   (let [type (image-type->key (.getType image))]
-     (when-not (or (= type :ushort-gray)
-                   (= type :byte-gray))
-       (throw (ex-info "Cannot convert to indexed grey image. Must be :ushort-gray or :byte-gray" {:type type}))))
-   (let [step (/ 256 num-greys)
-         values (indexed-greys num-greys in out)
-         color-model (IndexColorModel. 8 num-greys values values values)
-         new-image (BufferedImage. (.getWidth image)
-                         (.getHeight image)
-                         BufferedImage/TYPE_BYTE_INDEXED
-                         color-model)
-         rast (.getData image)
-         data (.getDataBuffer rast)
-         scale (make-scaler [0 255] 0 [0 (bit-shift-left 1 (.getPixelSize (.getColorModel image)))])]
-     (dotimes [i (.getSize data)]
-         (let [value (->> (.getElem data i)
-                          (scale)
-                          (#(/ % step))
-                          (math/floor))]
-           (.setElem data i value)))
-     (.setData new-image rast)
-     new-image)))
+  [image {:keys [c s u]}]
+  (let [type (image-type->key (.getType image))]
+    (when-not (or (= type :ushort-gray)
+                  (= type :byte-gray))
+      (throw (ex-info "Cannot convert to indexed grey image. Must be :ushort-gray or :byte-gray" {:type type}))))
+  (let [num-greys c
+        in (or s 1)
+        out (or u (/ 1 num-greys))
+        step (/ 256 num-greys)
+        values (indexed-greys num-greys in out)
+        color-model (IndexColorModel. 8 num-greys values values values)
+        new-image (BufferedImage. (.getWidth image)
+                                  (.getHeight image)
+                                  BufferedImage/TYPE_BYTE_INDEXED
+                                  color-model)
+        rast (.getData image)
+        data (.getDataBuffer rast)
+        scale (make-scaler [0 255] 0 [0 (bit-shift-left 1 (.getPixelSize (.getColorModel image)))])]
+    (dotimes [i (.getSize data)]
+      (let [value (->> (.getElem data i)
+                       (scale)
+                       (#(/ % step))
+                       (math/floor))]
+        (.setElem data i value)))
+    (.setData new-image rast)
+    new-image))

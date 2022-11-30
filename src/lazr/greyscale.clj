@@ -7,7 +7,10 @@
 (defn apply-command
   [command input-path output-path params]
   (as-> (ImageIO/read (File. input-path)) *
-    (apply command (cons * params))
+    ;; TODO: after args parsing make the fns just take maps
+    (if (empty? params)
+      (command *)
+      (command * params))
     (ImageIO/write * "png" (File. output-path))))
 
 (def options
@@ -23,7 +26,7 @@
   (run [_ opts _]
     ;; handle help case in here!
     ;; the dispatch and catch way
-    (apply-command fn (:i opts) (:o opts) (vals (dissoc opts :i :o))))
+    (apply-command fn (:i opts) (:o opts) (dissoc opts :i :o)))
 
   (help [_] {:lazr.command/description description})
 
@@ -36,6 +39,14 @@
                           (merge options {:c {:lazr.command/long-opt "num-greys"
                                               :lazr.command/description "Number of grey colors to use in output"
                                               :lazr.command/parser #(Integer/parseInt %)
+                                              :lazr.command/has-arg true}
+                                          :s {:lazr.command/long-opt "squashed-grey-count"
+                                              :lazr.command/description "Number of greys to squash into the output space"
+                                              :lazr.command/parser #(Integer/parseInt %)
+                                              :lazr.command/has-arg true}
+                                          :u {:lazr.command/long-opt "output-space-ratio"
+                                              :lazr.command/description "Ratio of the output space to squash greys into (ex: 0.5 1/2)"
+                                              :lazr.command/parser read-string
                                               :lazr.command/has-arg true}})
                           grey/->indexed)})
 
