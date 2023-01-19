@@ -2,25 +2,25 @@
 
 ;; TODO: spec for config!
 
-(defn- m4
+(defn m4
   [{:keys [s]}]
   (format "m4 s%d" s))
 
-(defn- g0
+(defn gN-args
   [{:keys [x y f s]}]
-  (str "g0"
-       (when (number? x) (format " x%.4f" (float x)))
-       (when (number? y) (format " y%.4f" (float y)))
-       (when (number? f) (format " f%d" f))
-       (when (number? s) (format " s%d" s))))
+  (str
+   (when (number? x) (format " x%.4f" (float x)))
+   (when (number? y) (format " y%.4f" (float y)))
+   (when (number? f) (format " f%d" f))
+   (when (number? s) (format " s%d" s))))
 
-(defn- g1
-  [{:keys [x y f s]}]
-  (str "g1"
-       (when (number? x) (format " x%.4f" (float x)))
-       (when (number? y) (format " y%.4f" (float y)))
-       (when (number? f) (format " f%d" f))
-       (when (number? s) (format " s%d" s))))
+(defn g0
+  [args]
+  (str "g0" (gN-args args)))
+
+(defn g1
+  [args]
+  (str "g1" (gN-args args)))
 
 (defn- prepare-coords
   [paths]
