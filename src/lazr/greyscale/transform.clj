@@ -1,17 +1,17 @@
 (ns lazr.greyscale.transform
-  (:require [clojure.math :as math])
+  (:require [clojure.math :as math]
+            [lazr.greyscale.values :refer [distribution]])
   (:import java.awt.Color
            java.awt.image.BufferedImage
            java.awt.image.IndexColorModel))
-
 ;; https://docs.oracle.com/javase/8/docs/api/java/awt/image/BufferedImage.html
 (def image-type->key
   {BufferedImage/TYPE_3BYTE_BGR :3-byte-bgr
    BufferedImage/TYPE_4BYTE_ABGR :4-byte-abgr
    BufferedImage/TYPE_4BYTE_ABGR_PRE :4-byte-abgr-pre
    BufferedImage/TYPE_BYTE_BINARY :byte-binary
-   BufferedImage/TYPE_BYTE_GRAY :byte-gray
-   BufferedImage/TYPE_BYTE_INDEXED :byte-indexed
+   BufferedImage/TYPE_BYTE_GRAY :byte-gray ; 10
+   BufferedImage/TYPE_BYTE_INDEXED :byte-indexed ; 13
    BufferedImage/TYPE_CUSTOM :custom
    BufferedImage/TYPE_INT_ARGB :int-argb
    BufferedImage/TYPE_INT_ARGB_PRE :int-argb-pre
@@ -104,3 +104,9 @@
         (.setElem data i value)))
     (.setData new-image rast)
     new-image))
+
+(defn ->indexed-corrected
+  [image {:keys [c] :as opts}]
+  (->indexed image
+             (-> (assoc opts :s (int (* c (:third-cut (distribution image)))))
+                 (assoc :u 1/3))))

@@ -35,7 +35,13 @@
 (def commands
   {:average (->SubCommand "Convert an image to grey based on the average of each pixel's R, G, and B values" options grey/->avg)
    :luminosity (->SubCommand "Convert an image to grey based on luminosity" options grey/->luminosity)
-   :indexed (->SubCommand "Simplify a greyscale image by indexing"
+   :correct (->SubCommand "Color correct a greyscale image for engraving"
+                          (merge options {:c {:lazr.command/long-opt "num-greys"
+                                              :lazr.command/description "Number of grey colors to use in output"
+                                              :lazr.command/parser #(Integer/parseInt %)
+                                              :lazr.command/has-arg true}})
+                          grey/->indexed-corrected)
+   :indexed (->SubCommand "Simplify a greyscale image by indexing (generally using 'correct' will be easier)"
                           (merge options {:c {:lazr.command/long-opt "num-greys"
                                               :lazr.command/description "Number of grey colors to use in output"
                                               :lazr.command/parser #(Integer/parseInt %)
