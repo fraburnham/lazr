@@ -107,6 +107,8 @@
 
 (defn ->indexed-corrected
   [image {:keys [c] :as opts}]
-  (->indexed image
-             (-> (assoc opts :s (int (* c (:third-cut (distribution image)))))
-                 (assoc :u 1/3))))
+  (let [squash (int (* c (:third-cut (distribution image))))]
+    (->indexed image
+               ;; this is a hack to prevent (/ % 0) later on
+               (-> (assoc opts :s (if (>= squash c) (dec c) squash))
+                   (assoc :u 1/3)))))

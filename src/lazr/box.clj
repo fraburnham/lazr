@@ -3,14 +3,14 @@
 
 ;; TODO: config spec!!
 ;; TODO: test cases!
-;; TODO: constraints!
+;; TODO: constraints! (maybe I don't need constraints. Maybe the reason I did strange shit with the corners was because of even instead of odd numbers?)
 
 ;; ncviewer.com
 
 ;; TODO: Document!!
-(defn- line-segment
+(defn- next-point
   ([config step]
-   (line-segment config step identity))
+   (next-point config step identity))
   ([{:keys [finger-width finger-depth]} step transformer]
    (transformer
     [(* finger-width
@@ -26,10 +26,11 @@
   ([{:keys [finger-width width] :as config} transformer]
    (reduce
     (fn [ret step]
-      (conj ret (line-segment config step transformer)))
+      (conj ret (next-point config step transformer)))
     [(transformer [0 0])]
     (range (* 2 (dec (/ width finger-width)))))))
 
+;; TODO: make a public interface for `face` so that a single face can be generated on the command line
 (defn- face
   [edge]
   (-> edge
@@ -37,9 +38,9 @@
       (#(into % (rest (mapv (comp (partial geom/translate (last %)) geom/rotate-180) edge))))
       (#(into % (rest (mapv (comp (partial geom/translate (last %)) geom/rotate-270) edge))))))
 
-(defn box
+(defn cube
   ([config]
-   (box config identity))
+   (cube config identity))
   ([{:keys [finger-depth finger-width width] :as config} transformer]
    (let [cap-edge (-> (edge config transformer)
                       (conj (transformer [(- width finger-depth) (- finger-depth)])))
@@ -56,3 +57,7 @@
       (mapv (partial geom/translate [0 (+ 1 width)]) wall)
       (mapv (partial geom/translate [(+ 1 width) (+ 1 width)]) cap)
       (mapv (partial geom/translate [(* 2 (+ 1 width)) (+ 1 width)]) cap)])))
+
+;; TODO: `column` a box with no caps and smooth edges where caps _would_ attach
+;; TODO: `drawer` a box with no top cap and a smooth edge where the top cap _would_ attach
+;; TODO: `box` a drawer with a removable lid (likely made of two bits, one to cover and one to keep it retained; slightly oversized for easy lifting)
