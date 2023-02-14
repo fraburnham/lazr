@@ -29,12 +29,12 @@
   (format "m4 s%d" s))
 
 (defn g0
-  [args]
-  (str "g0" (args args)))
+  [argv]
+  (str "g0" (args argv)))
 
 (defn g1
-  [args]
-  (str "g1" (args args)))
+  [argv]
+  (str "g1" (args argv)))
 
 (defn- prepare-coords
   [paths]
