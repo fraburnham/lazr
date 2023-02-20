@@ -37,8 +37,8 @@
       (when (number? x) (format " x%.4f" (float x)))
       (when (number? y) (format " y%.4f" (float y)))
       ;; can skip f,s if they haven't changed
-      (when (and (number? f) (not= (get state :f) f)) (format " f%d" f))
-      (when (and (number? s) (not= (get state :s) s)) (format " s%d" s))))))
+      (when (and (number? f) (not= (:f state) f)) (format " f%d" f))
+      (when (and (number? s) (not= (:s state) s)) (format " s%d" s))))))
 
 (def ->renames
   {:g0 #(rename-keys % {:travel-speed :f})
@@ -109,7 +109,7 @@
            gmap (rename (merge path config))]
        [(str gcode "\n"
              (generate gmap state))
-        (-> (assoc state :f (get gmap :f))
-            (assoc :s (get gmap :s)))]))
+        (-> (assoc state :f (:f gmap))
+            (assoc :s (:s gmap)))]))
    ["" {}]
    paths))
