@@ -1,5 +1,6 @@
 (ns lazr.raster
   (:require [lazr.command :as cmd]
+            [lazr.gcode.core :as gcode]
             [lazr.gcode.raster :as raster])
   (:import java.io.File
            javax.imageio.ImageIO))
@@ -26,7 +27,10 @@
 (defrecord Command []
   cmd/Command
   (run [_ {:keys [i s p f]} _]
-    (println (raster/->gcode f s p (ImageIO/read (File. i)))))
+    (println (gcode/encode {:laser-intensity s
+                            :laser-speed f
+                            :travel-speed f}
+                           (raster/->gcode s p (ImageIO/read (File. i))))))
 
   (help [_] {:lazr.command/description "Convert a greyscale raster to gcode"})
 

@@ -13,12 +13,12 @@
    (next-point config step identity))
   ([{:keys [finger-width finger-depth]} step transformer]
    (transformer
-    [(* finger-width
-        (int (/ step 2)))
-     (* finger-depth
-        (case (mod step 4)
-          (0 3) 0
-          (1 2) -1))])))
+    {:x (* finger-width
+           (int (/ step 2)))
+     :y (* finger-depth
+           (case (mod step 4)
+             (0 3) 0
+             (1 2) -1))})))
 
 (defn- edge
   ([config]
@@ -27,7 +27,7 @@
    (reduce
     (fn [ret step]
       (conj ret (next-point config step transformer)))
-    [(transformer [0 0])]
+    [(transformer {:x 0 :y 0})]
     (range (* 2 (dec (/ width finger-width)))))))
 
 ;; TODO: make a public interface for `face` so that a single face can be generated on the command line
@@ -43,23 +43,30 @@
    (cube config identity))
   ([{:keys [finger-depth finger-width width] :as config} transformer]
    (let [cap-edge (-> (edge config transformer)
-                      (conj (transformer [(- width finger-depth) (- finger-depth)])))
-         wall-edge (->> (edge config (comp transformer (partial geom/translate [(* 2 finger-width) 0])))
+                      (conj (transformer {:x (- width finger-depth) :y (- finger-depth)})))
+         ;; is the right level to worry about adding the g0 g1 types here?
+         wall-edge (->> (edge config (comp transformer (partial geom/translate {:x (* 2 finger-width) :y 0})))
                         (drop-last 3)
-                        (into [[0 0]]))
-         cap (mapv (partial geom/translate [0 finger-depth]) (face cap-edge))
-         wall (mapv (partial geom/translate [0 finger-depth]) (face wall-edge))]
-     [;; bottom row
-      wall
-      (mapv (partial geom/translate [(+ 1 width) 0]) wall)
-      (mapv (partial geom/translate [(* 2 (+ 1 width)) 0]) wall)
+                        (into [{:type :g0 :x 0 :y 0}]))
+         cap (mapv (partial geom/translate {:x 0 :y finger-depth}) (face cap-edge))
+         wall (mapv (partial geom/translate {:x 0 :y finger-depth}) (face wall-edge))
+         assoc-gcode-types (fn [gcodes]
+                             (-> (mapv #(assoc % :type :g1) gcodes)
+                                 (update 0 #(assoc % :type :g0))))]
+     (mapcat
+      assoc-gcode-types
+      [;; bottom row
+       wall
+       (mapv (partial geom/translate {:x (+ 1 width) :y 0}) wall)
+       (mapv (partial geom/translate {:x (* 2 (+ 1 width)) :y 0}) wall)
       ;; top row
-      (mapv (partial geom/translate [0 (+ 1 width)]) wall)
-      (mapv (partial geom/translate [(+ 1 width) (+ 1 width)]) cap)
-      (mapv (partial geom/translate [(* 2 (+ 1 width)) (+ 1 width)]) cap)])))
+       (mapv (partial geom/translate {:x 0 :y (+ 1 width)}) wall)
+       (mapv (partial geom/translate {:x (+ 1 width) :y (+ 1 width)}) cap)
+       (mapv (partial geom/translate {:x (* 2 (+ 1 width)) :y (+ 1 width)}) cap)]))))
 
 ;; TODO: `column` a box with no caps and smooth edges where caps _would_ attach
 ;; TODO: `drawer` a box with no top cap and a smooth edge where the top cap _would_ attach
 ;; TODO: `box` a drawer with a removable lid (likely made of two bits, one to cover and one to keep it retained; slightly oversized for easy lifting)
 
 ;; TODO: refactor this to output the maps that encode' expects so that compression can be applied here
+
