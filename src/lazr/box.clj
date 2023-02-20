@@ -61,3 +61,5 @@
 ;; TODO: `column` a box with no caps and smooth edges where caps _would_ attach
 ;; TODO: `drawer` a box with no top cap and a smooth edge where the top cap _would_ attach
 ;; TODO: `box` a drawer with a removable lid (likely made of two bits, one to cover and one to keep it retained; slightly oversized for easy lifting)
+
+;; TODO: refactor this to output the maps that encode' expects so that compression can be applied here

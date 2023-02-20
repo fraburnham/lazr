@@ -92,3 +92,7 @@
   (help [_] {::commands commands
              ::description description})
   (options [_] options))
+
+;; TODO: positional args parsing
+;; TODO: add key-fn to make handling the name easier downstream
+

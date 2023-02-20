@@ -20,7 +20,7 @@
       (let [index (- index 3)]
         [(x-calc index) (+ base-y panel-width panel-padding)]))))
 
-(defn- images->gcode
+(defn images->gcode
   [travel-speed laser-intensity pixels-per-mm images]
   (let [->gcode (partial raster/->gcode travel-speed laser-intensity pixels-per-mm)]
     (loop [gcode ""
@@ -39,14 +39,14 @@
   (str/join
    "\n"
    (repeat
-    6
+    4
     (gcode/encode
-     {:laser-speed 120 :laser-intensity 1000 :travel-speed 3500}
+     {:laser-speed 450 :laser-intensity 750 :travel-speed 3500}
      (box/cube {:finger-depth 5 :finger-width 5 :width 110})))))
 
 (defn- images->cube
   [images]
-  (str (images->gcode 3500 1000 10 images)
+  (str (images->gcode 5000 900 10 images)
        "\n"
        (cube-cuts)))
 
@@ -64,6 +64,8 @@
 
 (defn- prepare-images
   [images]
+  ;; need a gcode-stream? or something so that gcode file inputs are
+  ;; ignored (maybe the best thing to do would be add metadata during args parsing...)
   (map
    (comp
     ;; 16 color indexed grey image auto color corrected

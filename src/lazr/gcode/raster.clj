@@ -9,6 +9,8 @@
   [laser-intensity color-model rast w h]
   (int (* laser-intensity (/ (- 255 (.getRed color-model (byte-array [(.getSample rast w h 0)]))) 255))))
 
+;; refactor this to use paths like svg does
+;; then the translation to gcode can happen after
 ;; Args should be a map w/ spec at this point
 (defn ->gcode
   ([travel-speed laser-intensity pixels-per-mm image]
@@ -58,3 +60,5 @@
 ;; TODO: this needs refactor
 ;; specifically there are multiple places that determine which width or height to use (or which direction to go)
 ;; unify the mess!
+
+;; TODO: make this create the {:type :g0} style maps that encode' expects

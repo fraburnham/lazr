@@ -1,0 +1,27 @@
+#!/usr/bin/python3
+
+import os
+from tempfile import mkstemp
+import tkinter
+from tkinter.filedialog import askopenfilename
+from tkinter import messagebox
+
+tkinter.Tk().withdraw()
+inFile = askopenfilename()
+
+jar = os.getenv("LAZR_JAR", "target/lazr.jar")
+
+(f, scaleFile) = mkstemp(".lazr")
+os.close(f)
+os.system("java -jar {} scale -s 10 -x 103 -y 103 -i {} -o {}".format(jar, inFile, scaleFile))
+
+(f, greyFile) = mkstemp(".lazr")
+os.close(f)
+os.system("java -jar {} greyscale luminosity -i {} -o {}".format(jar, scaleFile, greyFile))
+os.remove(scaleFile)
+
+finalFile = "{}.lazr.png".format(os.path.splitext(inFile)[0])
+os.system("java -jar {} greyscale indexed -c 6 -i {} -o {}".format(jar, greyFile, finalFile))
+os.remove(greyFile)
+
+messagebox.showinfo("Lazr", "Transformations complete!")
